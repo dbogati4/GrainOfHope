@@ -1,2 +1,6 @@
 fastapi
 uvicorn
+pandas
+openpyxl
+numpy
+scikit-learn==1.3.*
