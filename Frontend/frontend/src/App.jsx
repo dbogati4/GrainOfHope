@@ -1,12 +1,26 @@
+// src/App.jsx
+import { useEffect, useState } from "react";
 import Sidebar from "./components/Sidebar";
 import Home from "./pages/Home";
+import About from "./pages/About";
 import "./index.css";
 
 export default function App() {
+  const [route, setRoute] = useState(window.location.hash || "#/");
+
+  useEffect(() => {
+    const onHash = () => setRoute(window.location.hash || "#/");
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+
+  let Page = <Home />;
+  if (route.startsWith("#/about")) Page = <About />;
+
   return (
     <div className="app">
       <Sidebar />
-      <Home />
+      {Page}
     </div>
   );
 }
