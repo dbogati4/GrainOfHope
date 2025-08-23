@@ -13,3 +13,7 @@ cd ../..
 python -m pip install -r requirements.txt
 
 
+To run the server:
+
+uvicorn main:app --reload
+
