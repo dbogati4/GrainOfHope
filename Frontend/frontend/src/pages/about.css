@@ -1,0 +1,128 @@
+/* Centered page width */
+.container {
+  width: min(1100px, calc(100% - 48px));
+  margin: 0 auto;
+}
+
+/* HERO */
+.about-hero {
+  position: relative;
+  min-height: 42vh;
+  display: grid;
+  align-items: end;
+  padding: 24px 0 40px;
+  color: #fff;
+  overflow: hidden;
+}
+.about-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("/malnutrition.webp") center / cover no-repeat;
+  z-index: -2;
+  filter: brightness(0.55) saturate(1.05);
+}
+.about-hero::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,.0) 30%, rgba(0,0,0,.55) 100%);
+  z-index: -1;
+}
+.hero-inner { text-align: center; }
+.hero-inner h1 { margin: 0 0 10px; font-size: clamp(34px, 5.2vw, 60px); font-weight: 900; }
+.hero-inner p  { margin: 0; font-size: clamp(16px, 2vw, 20px); opacity: .98; }
+
+/* SECTION spacing */
+.about-section { padding: 32px 0 64px; }
+
+/* FACT TILES */
+.kpis {
+  display: grid; gap: 12px; margin: 6px 0 22px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+@media (max-width: 1000px) { .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 620px)  { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.kpi {
+  background: #fff; color: #111; border: 1px solid #e5e7eb;
+  border-radius: 12px; padding: 14px; text-align: center;
+  box-shadow: 0 8px 18px rgba(0,0,0,.06);
+}
+.kpi-num { font-weight: 800; font-size: 26px; }
+.kpi-num span { opacity: .7; margin-left: 3px; }
+.kpi-label { font-size: 12.5px; color: #374151; }
+
+/* BLOG ARTICLE */
+.blog {
+  background: #ffffff;
+  color: #111;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 18px 18px 10px;
+  box-shadow: 0 10px 22px rgba(0,0,0,.08);
+  margin-bottom: 22px;
+  line-height: 1.75; font-size: 16px;
+}
+.blog-header .kicker {
+  text-transform: uppercase; letter-spacing: .12em; font-weight: 700;
+  font-size: 12px; color: #6b7280; margin: 0 0 6px;
+}
+.blog-header h2 { margin: 0 0 8px; font-size: 26px; }
+.blog-header .deck { margin: 0; color: #374151; }
+.blog h3 { margin: 16px 0 6px; font-size: 18px; }
+.blog ul { padding-left: 18px; }
+.blog li, .blog p { line-height: 1.65; }
+
+.divider {
+  height: 1px; background: linear-gradient(90deg, transparent, #e5e7eb, transparent);
+  margin: 14px 0;
+}
+ul.bullet { padding-left: 20px; margin: 8px 0 0; }
+ul.bullet li { margin: 6px 0; }
+
+.metric {
+  display: inline-block;
+  padding: 0 .35em;
+  border-radius: 6px;
+  background: #f0fdf4;
+  color: #14532d;
+  font-weight: 800;
+  border: 1px solid #bbefcf;
+}
+.callout {
+  margin-top: 10px;
+  border-left: 4px solid #22c55e;
+  background: #f6fef9;
+  color: #064e3b;
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+/* BLOG footer CTA */
+.blog-cta {
+  margin-top: 10px;
+  background: #f0fdf4; color: #14532d;
+  border: 1px solid #bbefcf;
+  border-radius: 12px;
+  padding: 12px;
+}
+.cta-actions { margin-top: 8px; display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* IMAGE ROW (50 / 50) */
+.img-row {
+  display: grid; gap: 18px;
+  grid-template-columns: 1fr 1fr;
+}
+@media (max-width: 900px) { .img-row { grid-template-columns: 1fr; } }
+
+.img-card {
+  background: #fff; border: 1px solid #e5e7eb;
+  border-radius: 12px; overflow: hidden;
+  box-shadow: 0 10px 24px rgba(0,0,0,.12);
+}
+.img-card img {
+  display: block; width: 100%; height: 360px; object-fit: cover;
+}
+.img-card figcaption {
+  padding: 10px 12px; font-size: 13px; color: #374151; background: #f9fafb;
+}
+
