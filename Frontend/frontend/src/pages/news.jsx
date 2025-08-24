@@ -266,7 +266,7 @@ export default function News() {
       {/* Hero */}
       <header style={styles.hero}>
         <div style={styles.heroInner}>
-          <h1 style={styles.heroH1}>World Food News</h1>
+          <h1 style={styles.heroH1}>World Hunger News</h1>
           <p style={styles.heroP}>
             Stay updated on hunger, famine, and food security worldwide.
           </p>
