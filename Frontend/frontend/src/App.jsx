@@ -3,6 +3,7 @@ import Sidebar from "./components/Sidebar";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Calculator from "./pages/Calculator";
+import News from "./pages/News"; 
 import "./index.css";
 
 export default function App() {
@@ -15,8 +16,13 @@ export default function App() {
   }, []);
 
   let Page = <Home />;
-  if (route.startsWith("#/about")) Page = <About />;
-  else if (route.startsWith("#/calculator")) Page = <Calculator />;
+  if (route.startsWith("#/about")) {
+    Page = <About />;
+  } else if (route.startsWith("#/calculator")) {
+    Page = <Calculator />;
+  } else if (route.startsWith("#/news")) {
+    Page = <News />; 
+  }
 
   return (
     <div className="app">
