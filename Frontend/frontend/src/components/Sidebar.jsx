@@ -19,6 +19,7 @@ export default function Sidebar() {
         <a className={is("#/chatbot")} href="#/chatbot">Chatbot</a>
         <a className={is("#/about")} href="#/about">About</a>
         <a className={is("#/news")} href="#/news">World Hunger News</a>
+        <a className={is("#/mythbusting")} href="#/mythbusting">Myth Busting</a>
       </nav>
       <footer>
         <small>© {new Date().getFullYear()} Grain of Hope</small>
