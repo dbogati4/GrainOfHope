@@ -1,24 +1,37 @@
-# ai_predict_from_loaded_full.py
-# Predict 2025..2035 per country using a proper ML model with country×year interactions.
-# Works with loaded_full.csv in either wide (year columns) or long (year/value) shape.
-
 from pathlib import Path
 import numpy as np
 import pandas as pd
 
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder, PolynomialFeatures
 from sklearn.linear_model import Ridge
 from sklearn.pipeline import Pipeline
 
 IN_PATH = Path("data/processed/loaded_full.csv")   # adjust if your file lives elsewhere
 OUT_DIR = Path("data/processed")
-PRED_YEARS = list(range(2025, 2036))               # inclusive 2035
-ANCHOR_YEARS = {2000, 2008, 2016, 2024}            # years present in your file
+
+# ***** CHANGED: restrict predictions to 2025..2030 *****
+PRED_YEARS = list(range(2025, 2031))               # 2025, 2026, 2027, 2028, 2029, 2030
+
+# Anchor years we actually have in the merged dataset
+ANCHOR_YEARS = {2000, 2007, 2008, 2014, 2015, 2016, 2022, 2023, 2024}
+
 CLIP_MIN, CLIP_MAX = 0.0, 100.0                    # sensible bounds for GHI-like scores
 
 # ----------------- Helpers -----------------
+
+class CountryBasisInteraction(BaseEstimator, TransformerMixin):
+    """Stack [OHE, basis, OHE*basis]; basis is [year_c, year_c^2]."""
+    def __init__(self, n_basis=2):
+        self.n_basis = n_basis
+    def fit(self, X, y=None):
+        return self
+    def transform(self, X):
+        ohe   = X[:, :-self.n_basis]
+        basis = X[:, -self.n_basis:]
+        inter = np.einsum("ij,ik->ijk", ohe, basis).reshape(X.shape[0], -1)
+        return np.hstack([ohe, basis, inter])
 
 def _normalize_cols(cols):
     return [str(c).strip() for c in cols]
@@ -57,7 +70,6 @@ def _to_long_country_year_value(df: pd.DataFrame) -> pd.DataFrame:
     # Wide?
     year_cols = [c for c in df.columns if str(c).isdigit()]
     if year_cols:
-        # Ensure numeric
         for y in year_cols:
             df[y] = pd.to_numeric(df[y], errors="coerce")
         long_df = df.melt(id_vars=[country_col], value_vars=year_cols,
@@ -70,12 +82,10 @@ def _to_long_country_year_value(df: pd.DataFrame) -> pd.DataFrame:
 
     # Long?
     if "year" in df.columns:
-        # coerce year
         df["year"] = pd.to_numeric(df["year"], errors="coerce").astype("Int64")
         target_col = _detect_long_target_column(df)
         if not target_col:
             raise ValueError("Could not detect a target column in long format (looked for ghi/value/score/index).")
-        # ensure numeric target
         df[target_col] = pd.to_numeric(df[target_col], errors="coerce")
         out = df[[country_col, "year", target_col]].dropna(subset=[target_col, "year"]).copy()
         out.rename(columns={country_col: "country", target_col: "value"}, inplace=True)
@@ -83,12 +93,12 @@ def _to_long_country_year_value(df: pd.DataFrame) -> pd.DataFrame:
         out["country"] = out["country"].astype(str).str.strip()
         return out[["country", "year", "value"]]
 
-    raise ValueError("Could not determine table shape. Need either year columns (2000,2008,2016,2024) or a 'year' column.")
+    raise ValueError("Could not determine table shape. Need either year columns (e.g., 2000/2008/2016/2024) or a 'year' column.")
 
 def _prepare_training(long_df: pd.DataFrame) -> pd.DataFrame:
     train = long_df[long_df["year"].isin(ANCHOR_YEARS)].copy()
     if train.empty:
-        raise RuntimeError("No training rows found. Ensure loaded_full.csv has values for 2000, 2008, 2016, or 2024.")
+        raise RuntimeError("No training rows found. Ensure loaded_full.csv has values for anchor years.")
     return train
 
 def _build_ohe():
@@ -98,48 +108,51 @@ def _build_ohe():
     except TypeError:
         return OneHotEncoder(handle_unknown="ignore", sparse=False)         # sklearn <= 1.1
 
-class CountryYearInteraction(BaseEstimator, TransformerMixin):
-    """
-    Transform [OHE(country) | year] into [OHE(country), year, OHE(country)*year]
-    so each country gets its own intercept AND slope.
-    """
-    def fit(self, X, y=None):
-        return self
-    def transform(self, X):
-        ohe = X[:, :-1]
-        year = X[:, -1:].astype(float)
-        inter = ohe * year  # broadcast
-        return np.hstack([ohe, year, inter])
-
 def _fit_model(train_df: pd.DataFrame) -> Pipeline:
-    X = train_df[["country", "year"]]
-    y = train_df["value"].astype(float)
+    year0 = train_df["year"].mean()
+    train_df = train_df.copy()
+    train_df["year_c"] = train_df["year"] - year0
 
     pre = ColumnTransformer(
         transformers=[
             ("country", _build_ohe(), ["country"]),
-            ("year", "passthrough", ["year"]),
+            ("year_poly", Pipeline([
+                ("poly", PolynomialFeatures(degree=2, include_bias=False))  # [year_c, year_c^2]
+            ]), ["year_c"]),
         ],
         remainder="drop",
     )
 
-    # Ridge = stable with many dummy features + interactions
-    model = Ridge(alpha=10.0)
-
     pipe = Pipeline(steps=[
         ("pre", pre),
-        ("inter", CountryYearInteraction()),
-        ("model", model),
+        ("inter", CountryBasisInteraction(n_basis=2)),
+        ("model", Ridge(alpha=10.0)),
     ])
+
+    X = train_df[["country", "year_c"]]
+    y = train_df["value"].astype(float)
     pipe.fit(X, y)
+
+    # save the center so _predict_for_years can reproduce year_c
+    pipe.named_steps["pre"].year_center_ = float(year0)
     return pipe
 
-def _predict_for_years(pipe: Pipeline, countries: list[str], years: list[int]) -> pd.DataFrame:
-    grid = pd.DataFrame([(c, y) for c in countries for y in years], columns=["country", "year"])
-    preds = pipe.predict(grid)
+def _predict_for_years(pipe, countries: list[str], years: list[int]) -> pd.DataFrame:
+    year0 = getattr(pipe.named_steps["pre"], "year_center_", None)
+    if year0 is None:
+        raise RuntimeError("Model preprocessor has no 'year_center_' — make sure you used the updated _fit_model.")
+
+    rows = []
+    for c in countries:
+        for y in years:
+            rows.append({"country": c, "year": y, "year_c": y - year0})
+    grid = pd.DataFrame(rows)
+
+    preds = pipe.predict(grid[["country", "year_c"]])
     preds = np.clip(preds, CLIP_MIN, CLIP_MAX)
+
     grid["ghi_pred"] = preds
-    return grid
+    return grid[["country", "year", "ghi_pred"]]
 
 # ----------------- Main -----------------
 
@@ -156,24 +169,23 @@ def main_predict():
     countries = sorted(train["country"].unique())
     preds = _predict_for_years(pipe, countries, PRED_YEARS)
 
-    # Save per-country predictions
-    out_country = OUT_DIR / "ai_country_year_predictions_2025_2035_from_full.csv"
+    # ***** CHANGED: filenames reflect 2025_2030 *****
+    out_country = OUT_DIR / "ai_country_year_predictions_2025_2030_from_full.csv"
     preds.to_csv(out_country, index=False, encoding="utf-8")
 
-    # Global mean per year (unweighted)
     global_year = (
         preds.groupby("year", as_index=False)["ghi_pred"]
              .mean()
              .rename(columns={"ghi_pred": "global_ghi_mean"})
     )
-    out_global = OUT_DIR / "ai_global_year_predictions_2025_2035_from_full.csv"
+    out_global = OUT_DIR / "ai_global_year_predictions_2025_2030_from_full.csv"
     global_year.to_csv(out_global, index=False, encoding="utf-8")
 
     print(f"[OK] Wrote {out_country} (rows={len(preds):,})")
     print(f"[OK] Wrote {out_global} (rows={len(global_year):,})")
 
-    # quick sanity check: different countries should have different values for the same year
-    yr = 2028
+    # quick sanity check
+    yr = 2027
     print(f"\nSample predictions for {yr}:")
     print(preds[preds['year'] == yr].head(10).to_string(index=False))
 
@@ -186,3 +198,4 @@ def main_predict():
 
 if __name__ == "__main__":
     main_predict()
+
