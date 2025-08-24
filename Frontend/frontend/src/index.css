@@ -176,3 +176,73 @@ body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helve
 @media (min-width: 1024px) {
   .insights-grid { grid-template-columns: 1fr 1fr; }  /* desktop: 50 / 50 */
 }
+
+
+/* Calculator styles */
+.grid2 { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 1024px) { .grid2 { grid-template-columns: 1fr 1fr; } }
+
+.card {
+  background: #fff; color: #111; border: 1px solid #e5e7eb;
+  border-radius: 14px; padding: 16px;
+  box-shadow: 0 8px 20px rgba(0,0,0,.08);
+}
+
+.form-row { display: grid; gap: 6px; margin-bottom: 10px; }
+.form-row.check { display: block; }
+.form-row input[type="number"], .form-row select, .form-row input[type="range"] {
+  padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 8px;
+}
+.hint { color: #4b5563; font-size: 13px; margin-top: 6px; }
+
+.mini-grid { display: grid; gap: 10px; grid-template-columns: repeat(2, 1fr); margin-bottom: 12px; }
+.mini { background:#f9fafb; border:1px solid #eef2f7; border-radius: 10px; padding: 10px; text-align: center; }
+.mini-label { font-size: 12px; color:#6b7280; }
+.mini-val { font-weight: 800; font-size: 18px; }
+
+.big-result { text-align:center; padding: 12px; }
+.big-num { font-size: 48px; font-weight: 900; line-height: 1; }
+.big-caption { font-weight: 600; }
+.big-sub { color:#4b5563; margin-top: 4px; }
+
+.disclaimer { margin-top: 12px; color:#6b7280; font-size: 13px; }
+/* Donate tiles */
+.donate-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.donate-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 6px 14px rgba(0,0,0,.06);
+}
+
+.donate-title {
+  font-weight: 800;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.donate-blurb {
+  color: #4b5563;
+  font-size: 13px;
+  margin: 6px 0 10px;
+}
+
+.btn.donate-btn {
+  align-self: start;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #111;
+  color: #fff;
+  text-decoration: none;
+  border: 1px solid #0f172a;
+}
+.btn.donate-btn:hover { filter: brightness(1.05); }
