@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GrainOfHope - Food Donation Network</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            padding: 30px 0;
+        }
+        
+        .header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-number {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .map-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .section-title {
+            font-size: 1.4rem;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .map-container {
+            height: 500px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 1000;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .filters {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #667eea;
+            background: transparent;
+            color: #667eea;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .filter-btn.active, .filter-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-1px);
+        }
+        
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .quick-donate {
+            text-align: center;
+        }
+        
+        .quick-donate h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .role-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .role-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .role-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .role-btn.secondary {
+            background: linear-gradient(135deg, #4ecdc4, #44c2c2);
+        }
+        
+        .available-now {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .available-item {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-left: 4px solid #4caf50;
+            transition: all 0.3s ease;
+        }
+        
+        .available-item:hover {
+            transform: translateX(3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .restaurant-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .status-live {
+            background: #4caf50;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        .item-details {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .quick-action {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.3s ease;
+        }
+        
+        .quick-action:hover {
+            background: #5a6fd8;
+            transform: scale(1.05);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 10000;
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4caf50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 10001;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .map-legend {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+            font-size: 12px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        
+        @media (max-width: 968px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                order: -1;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌾 Grain of Hope</h1>
+            <p>Real-time Food Donation Network - Fighting Hunger Together</p>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalDonations">247</div>
+                <div class="stat-label">Total Donations</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="mealsProvided">18,540</div>
+                <div class="stat-label">Meals Provided</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="activePartners">89</div>
+                <div class="stat-label">Active Partners</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="wasteReduced">12.3T</div>
+                <div class="stat-label">Waste Reduced</div>
+            </div>
+        </div>
+        
+        <div class="main-layout">
+            <div class="map-section">
+                <div class="section-header">
+                    <h3 class="section-title">🗺️ Live Donation Map</h3>
+                    <div class="filters">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="available">Available Now</button>
+                        <button class="filter-btn" data-filter="prepared-meals">Meals</button>
+                        <button class="filter-btn" data-filter="fresh-produce">Produce</button>
+                        <button class="filter-btn" data-filter="baked-goods">Bakery</button>
+                    </div>
+                </div>
+                
+                <div class="map-container">
+                    <div class="loading" id="mapLoading">
+                        <div class="spinner"></div>
+                        <p>Loading map...</p>
+                    </div>
+                    <div id="map" style="height: 100%; width: 100%;"></div>
+                </div>
+                
+                <div class="map-legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #4caf50;"></div>
+                        <span>Available Now</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #ff9800;"></div>
+                        <span>Pickup Scheduled</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #2196f3;"></div>
+                        <span>Food Bank</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sidebar">
+                <div class="card quick-donate">
+                    <h3>Join the Network</h3>
+                    <div class="role-buttons">
+                        <button class="role-btn" onclick="openModal('restaurantModal')">
+                            🍽️ I have food to donate
+                        </button>
+                        <button class="role-btn secondary" onclick="openModal('foodbankModal')">
+                            🏛️ I need food donations
+                        </button>
+                    </div>
+                    <button class="role-btn" style="background: linear-gradient(135deg, #28a745, #20c997);" onclick="findNearMe()">
+                        📍 Find donations near me
+                    </button>
+                </div>
+                
+                <div class="card">
+                    <h3 class="section-title">🔴 Available Now</h3>
+                    <div class="available-now" id="availableNow">
+                        <!-- Available items will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Restaurant Modal -->
+    <div id="restaurantModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🍽️ Donate Food</h3>
+                <button class="close-btn" onclick="closeModal('restaurantModal')">&times;</button>
+            </div>
+            <form id="restaurantForm">
+                <div class="form-group">
+                    <label>Restaurant/Business Name</label>
+                    <input type="text" id="restaurantName" required placeholder="Your business name">
+                </div>
+                <div class="form-group">
+                    <label>Contact Person</label>
+                    <input type="text" id="contactPerson" required placeholder="Your name">
+                </div>
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="tel" id="phone" required placeholder="(555) 123-4567">
+                </div>
+                <div class="form-group">
+                    <label>Address</label>
+                    <input type="text" id="address" required placeholder="Full address for pickup">
+                </div>
+                <div class="form-group">
+                    <label>Food Type</label>
+                    <select id="foodType" required>
+                        <option value="">Select type</option>
+                        <option value="prepared-meals">Prepared Meals</option>
+                        <option value="fresh-produce">Fresh Produce</option>
+                        <option value="packaged-goods">Packaged Goods</option>
+                        <option value="baked-goods">Baked Goods</option>
+                        <option value="mixed">Mixed Items</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Quantity (servings or pounds)</label>
+                    <input type="number" id="quantity" required placeholder="e.g., 50">
+                </div>
+                <div class="form-group">
+                    <label>Available Until</label>
+                    <select id="pickupTime" required>
+                        <option value="">Select time</option>
+                        <option value="2-hours">Next 2 hours</option>
+                        <option value="today">End of today</option>
+                        <option value="tomorrow">Tomorrow</option>
+                        <option value="flexible">Flexible</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Additional Notes (optional)</label>
+                    <textarea id="notes" placeholder="Special instructions, dietary info, etc." rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn-primary">🚀 Make Food Available</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Food Bank Modal -->
+    <div id="foodbankModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🏛️ Register Food Bank</h3>
+                <button class="close-btn" onclick="closeModal('foodbankModal')">&times;</button>
+            </div>
+            <form id="foodbankForm">
+                <div class="form-group">
+                    <label>Organization Name</label>
+                    <input type="text" id="organizationName" required placeholder="Food bank or charity name">
+                </div>
+                <div class="form-group">
+                    <label>Contact Person</label>
+                    <input type="text" id="contactPersonFB" required placeholder="Coordinator name">
+                </div>
+                <div class="form-group">
+                    <label>Phone & Email</label>
+                    <input type="text" id="contact" required placeholder="Phone and email">
+                </div>
+                <div class="form-group">
+                    <label>Service Area</label>
+                    <input type="text" id="serviceArea" required placeholder="Areas you serve">
+                </div>
+                <div class="form-group">
+                    <label>Daily Capacity</label>
+                    <select id="capacity" required>
+                        <option value="">Select capacity</option>
+                        <option value="small">Small (1-50 servings/day)</option>
+                        <option value="medium">Medium (51-200 servings/day)</option>
+                        <option value="large">Large (200+ servings/day)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary">📋 Register & Get Notified</button>
+            </form>
+        </div>
+    </div>
+    
+    <div id="notification" class="notification"></div>
+
+    <script>
+        let map;
+        let markers = [];
+        let currentFilter = 'all';
+        let userLocation = null;
+        
+        // Sample data
+        const donations = [
+            {
+                id: 1,
+                restaurantName: "Mario's Italian Kitchen",
+                address: "123 Main St, San Marcos, TX",
+                lat: 29.8833,
+                lng: -97.9414,
+                foodType: "prepared-meals",
+                quantity: "45 servings",
+                status: "available",
+                pickupTime: "2-hours",
+                contactPerson: "Mario Rossi",
+                phone: "(512) 555-0123",
+                notes: "Fresh pasta dishes, still warm",
+                timePosted: "10 minutes ago"
+            },
+            {
+                id: 2,
+                restaurantName: "Sunrise Bakery",
+                address: "456 University Dr, San Marcos, TX",
+                lat: 29.8911,
+                lng: -97.9378,
+                foodType: "baked-goods",
+                quantity: "30 lbs",
+                status: "available",
+                pickupTime: "today",
+                contactPerson: "Sarah Johnson",
+                phone: "(512) 555-0456",
+                notes: "Fresh bread and pastries",
+                timePosted: "25 minutes ago"
+            },
+            {
+                id: 3,
+                restaurantName: "Green Garden Cafe",
+                address: "789 Wonder World Dr, San Marcos, TX",
+                lat: 29.8775,
+                lng: -97.9342,
+                foodType: "fresh-produce",
+                quantity: "25 servings",
+                status: "available",
+                pickupTime: "2-hours",
+                contactPerson: "Emma Green",
+                phone: "(512) 555-0789",
+                notes: "Organic salads and fresh vegetables",
+                timePosted: "5 minutes ago"
+            },
+            {
+                id: 4,
+                restaurantName: "Taco Express",
+                address: "321 Aquarena Springs Dr, San Marcos, TX",
+                lat: 29.8947,
+                lng: -97.9453,
+                foodType: "prepared-meals",
+                quantity: "60 servings",
+                status: "available",
+                pickupTime: "2-hours",
+                contactPerson: "Carlos Martinez",
+                phone: "(512) 555-0321",
+                notes: "Tacos, rice, and beans - still warm",
+                timePosted: "2 minutes ago"
+            }
+        ];
+
+        const foodbanks = [
+            { name: "San Marcos Food Bank", lat: 29.8794, lng: -97.9311 },
+            { name: "Hope Center", lat: 29.8856, lng: -97.9425 }
+        ];
+
+        // Initialize map
+        function initializeMap() {
+            try {
+                map = L.map('map').setView([29.8833, -97.9414], 13);
+                
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+                
+                updateMapMarkers();
+                updateAvailableNow();
+                
+                // Hide loading
+                document.getElementById('mapLoading').style.display = 'none';
+                
+            } catch (error) {
+                console.error('Map initialization error:', error);
+                document.getElementById('mapLoading').innerHTML = '<p>Map failed to load</p>';
+            }
+        }
+
+        function updateMapMarkers() {
+            // Clear existing markers
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
+            
+            // Filter donations
+            const filteredDonations = donations.filter(donation => {
+                if (currentFilter === 'all') return true;
+                if (currentFilter === 'available') return donation.status === 'available';
+                return donation.foodType === currentFilter;
+            });
+            
+            // Add donation markers
+            filteredDonations.forEach(donation => {
+                const color = donation.status === 'available' ? '#4caf50' : '#ff9800';
+                
+                const marker = L.circleMarker([donation.lat, donation.lng], {
+                    color: '#fff',
+                    fillColor: color,
+                    fillOpacity: 0.8,
+                    radius: 12,
+                    weight: 2
+                }).addTo(map);
+                
+                const popupContent = `
+                    <div style="min-width: 200px;">
+                        <h4 style="margin: 0 0 8px 0; color: #333;">${donation.restaurantName}</h4>
+                        <p style="margin: 0 0 5px 0; font-size: 12px; color: #666;">${donation.address}</p>
+                        <div style="margin: 8px 0;">
+                            <strong>${donation.quantity}</strong> of ${donation.foodType.replace('-', ' ')}
+                        </div>
+                        <div style="background: #4caf50; color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; display: inline-block; margin: 5px 0;">
+                            Available ${donation.pickupTime}
+                        </div>
+                        <div style="margin-top: 8px;">
+                            <strong>Contact:</strong> ${donation.contactPerson}<br>
+                            <strong>Phone:</strong> ${donation.phone}
+                        </div>
+                        ${donation.notes ? `<div style="margin-top: 8px; font-size: 12px; color: #666;"><em>${donation.notes}</em></div>` : ''}
+                    </div>
+                `;
+                
+                marker.bindPopup(popupContent);
+                markers.push(marker);
+            });
+            
+            // Add food bank markers
+            foodbanks.forEach(foodbank => {
+                const marker = L.circleMarker([foodbank.lat, foodbank.lng], {
+                    color: '#fff',
+                    fillColor: '#2196f3',
+                    fillOpacity: 0.8,
+                    radius: 10,
+                    weight: 2
+                }).addTo(map);
+                
+                marker.bindPopup(`<h4>${foodbank.name}</h4><p>Food Bank</p>`);
+                markers.push(marker);
+            });
+        }
+
+        function updateAvailableNow() {
+            const availableNow = document.getElementById('availableNow');
+            const availableDonations = donations.filter(d => d.status === 'available');
+            
+            if (availableDonations.length === 0) {
+                availableNow.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No donations available right now</p>';
+                return;
+            }
+            
+            availableNow.innerHTML = availableDonations.map(donation => `
+                <div class="available-item">
+                    <div class="item-header">
+                        <span class="restaurant-name">${donation.restaurantName}</span>
+                        <span class="status-live">LIVE</span>
+                    </div>
+                    <div class="item-details">
+                        ${donation.quantity} of ${donation.foodType.replace('-', ' ')} • ${donation.timePosted}
+                    </div>
+                    <button class="quick-action" onclick="contactRestaurant('${donation.phone}', '${donation.restaurantName}')">
+                        📞 Contact Now
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Filter functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            filterButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    filterButtons.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentFilter = this.dataset.filter;
+                    updateMapMarkers();
+                });
+            });
+        });
+
+        // Modal functions
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Form submissions
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('restaurantForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = {
+                    restaurantName: document.getElementById('restaurantName').value,
+                    contactPerson: document.getElementById('contactPerson').value,
+                    phone: document.getElementById('phone').value,
+                    address: document.getElementById('address').value,
+                    foodType: document.getElementById('foodType').value,
+                    quantity: document.getElementById('quantity').value,
+                    pickupTime: document.getElementById('pickupTime').value,
+                    notes: document.getElementById('notes').value,
+                    status: 'available',
+                    timePosted: 'Just now'
+                };
+                
+                // Add to donations array (simulate saving to database)
+                const newDonation = {
+                    ...formData,
+                    id: Date.now(),
+                    lat: 29.8833 + (Math.random() - 0.5) * 0.02,
+                    lng: -97.9414 + (Math.random() - 0.5) * 0.02,
+                    timePosted: 'Just now'
+                };
+                
+                donations.unshift(newDonation);
+                
+                updateMapMarkers();
+                updateAvailableNow();
+                showNotification('✅ Your donation is now live on the map!');
+                closeModal('restaurantModal');
+                this.reset();
+            });
+            
+            document.getElementById('foodbankForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                showNotification('✅ Food bank registered! You\'ll receive notifications for nearby donations.');
+                closeModal('foodbankModal');
+                this.reset();
+            });
+        });
+
+        function contactRestaurant(phone, name) {
+            showNotification(`📞 Calling ${name} at ${phone}`);
+            // In a real app, this could integrate with phone dialer or messaging
+        }
+
+        function findNearMe() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        
+                        map.setView([userLocation.lat, userLocation.lng], 15);
+                        
+                        // Add user location marker
+                        if (window.userMarker) {
+                            map.removeLayer(window.userMarker);
+                        }
+                        
+                        window.userMarker = L.marker([userLocation.lat, userLocation.lng])
+                            .addTo(map)
+                            .bindPopup('📍 Your Location')
+                            .openPopup();
+                        
+                        showNotification('📍 Found your location! Showing nearby donations.');
+                    },
+                    function(error) {
+                        showNotification('❌ Could not get your location');
+                    }
+                );
+            } else {
+                showNotification('❌ Geolocation not supported');
+            }
+        }
+
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Close modals when clicking outside
+        window.addEventListener('click', function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        });
+
+        // Initialize everything when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Small delay to ensure DOM and Leaflet are ready
+            setTimeout(() => {
+                initializeMap();
+            }, 500);
+        });
+
+        // Auto-refresh available donations every 30 seconds
+        setInterval(() => {
+            updateAvailableNow();
+            // Simulate new donations occasionally
+            if (Math.random() > 0.9) {
+                const sampleNames = ['Quick Bite', 'Corner Deli', 'Fresh Kitchen', 'Local Eatery'];
+                const randomName = sampleNames[Math.floor(Math.random() * sampleNames.length)];
+                showNotification(`🔔 New donation from ${randomName}!`);
+            }
+        }, 30000);
+    </script>
+</body>
+</html>
