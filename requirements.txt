@@ -1,6 +1,8 @@
-fastapi
-uvicorn
-pandas
-openpyxl
-numpy
-scikit-learn==1.3.*
+langchain-community
+openai
+aiohttp
+aiofiles
+beautifulsoup4
+flask
+python-dotenv
+chromadb
