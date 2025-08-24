@@ -18,6 +18,7 @@ export default function Sidebar() {
         <a className={is("#/calculator")} href="#/calculator">Calculator</a>
         <a className={is("#/chatbot")} href="#/chatbot">Chatbot</a>
         <a className={is("#/about")} href="#/about">About</a>
+        <a className={is("#/knowledge-quiz")} href="#/knowledge-quiz">Hunger Knowledge Quiz</a>
         <a className={is("#/news")} href="#/news">World Hunger News</a>
         <a className={is("#/mythbusting")} href="#/mythbusting">Myth Busting</a>
       </nav>
