@@ -334,7 +334,7 @@ export default function Calculator() {
           <div className="charts-two">
             {/* Before */}
             <div className="card">
-              <h3 style={{ marginTop: 0 }}>Before (baseline model)</h3>
+              <h3 style={{ marginTop: 0 }}>Before your donation</h3>
               <div className="chart-wrap" style={{ height: 320 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={beforeSeries} margin={{ left: 12, right: 12, top: 10, bottom: 24 }}>
@@ -358,7 +358,7 @@ export default function Calculator() {
 
             {/* After */}
             <div className="card">
-              <h3 style={{ marginTop: 0 }}>After (with your donation)</h3>
+              <h3 style={{ marginTop: 0 }}>After your donation</h3>
               <div className="chart-wrap" style={{ height: 320 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={afterSeries} margin={{ left: 12, right: 12, top: 10, bottom: 24 }}>

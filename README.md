@@ -15,7 +15,9 @@ GrainOfHope brings together *real* Global Hunger Index (GHI) data and a simple, 
 - *Before vs After*: side‑by‑side charts (2025‑2030) that show a baseline global GHI trend *before* and an illustrative, visibility‑scaled trend *after* your donation.
 - *Donate*: curated links to trusted organizations.
 - *About*: methodology, limitations, and sources.
-- *(Optional sections)*: real‑time hunger news, myth‑busting, and a lightweight chatbot.
+- *World Hunger News*: real‑time hunger news.
+- *Myth Busting*: Myth Vs Reality of Food Hunger.
+- *Real Time Quiz*: Quiz to test their knowledge on World Food Hunger. 
 
 **Model at a glance**
 
@@ -124,8 +126,8 @@ npm run dev
 
 - *Dipika* — Backend model & API; Frontend (Home, Calculator, About).
 - *Puskar* — Meeting coordination; Frontend (real‑time hunger news, myth‑busting); Presentation.
-- *Sarbocha* — Chatbot (backend & frontend).
-- *Roshan* — Project planning.
+- *Sarbocha* — Initial Project Planning.
+- *Roshan* — Initial Project planning.
 
 ---
 
