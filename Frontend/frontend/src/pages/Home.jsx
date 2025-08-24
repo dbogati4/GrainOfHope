@@ -158,7 +158,7 @@ export default function Home() {
           <p>Predictive insights to help the world fight hunger — country by country.</p>
           <div className="ctas">
             <a className="btn" href="#/calculator">Open Calculator</a>
-            <a className="btn ghost" href="#/chatbot">Ask the Chatbot</a>
+            {/* <a className="btn ghost" href="#/chatbot">Ask the Chatbot</a> */}
             <a className="btn ghost" href="#insights">View Insights ↓</a>
           </div>
         </div>

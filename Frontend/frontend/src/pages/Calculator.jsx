@@ -300,12 +300,12 @@ export default function Calculator() {
           <h2 style={{ marginTop: 0 }}>Projected GHI with Your Donation (illustrative)</h2>
 
           <div className="controls-row" style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 10 }}>
-            <div>
+            {/* <div>
               <label className="lbl">Country</label>
               <select value={country} onChange={e => setCountry(e.target.value)}>
                 {countries.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
-            </div>
+            </div> */}
             <div>
               <label className="lbl">Year</label>
               <select value={year} onChange={e => setYear(Number(e.target.value))}>
