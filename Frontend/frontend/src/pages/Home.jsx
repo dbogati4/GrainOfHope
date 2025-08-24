@@ -196,7 +196,7 @@ export default function Home() {
                 <Line
                   type="monotone"
                   dataKey="global_ghi_mean"
-                  name="Global GHI (mean)"
+                  name="Years"
                   stroke="#16a34a"
                   strokeWidth={3}
                   dot={{ r: 3 }}
@@ -242,7 +242,7 @@ export default function Home() {
                 <YAxis domain={[0, 100]} label={{ value: "GHI (0–100)", angle: -90, position: "insideLeft" }} />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="ghi_pred" name="GHI (predicted)" fill="#111">
+                <Bar dataKey="ghi_pred" name="Countries" fill="#111">
                   <LabelList dataKey="ghi_pred" position="top" formatter={(v) => fmt1(v)} />
                 </Bar>
               </BarChart>
