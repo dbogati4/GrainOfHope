@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from setup_and_preprocess import load_dataframe
 from pathlib import Path
@@ -8,8 +8,8 @@ import pandas as pd
 
 
 # === Files produced by your training script ===
-COUNTRY_FILE = Path("data/processed/ai_country_year_predictions_2025_2035_from_full.csv")
-GLOBAL_FILE  = Path("data/processed/ai_global_year_predictions_2025_2035_from_full.csv")
+COUNTRY_FILE = Path("data/processed/ai_country_year_predictions_2025_2030_from_full.csv")
+GLOBAL_FILE  = Path("data/processed/ai_global_year_predictions_2025_2030_from_full.csv")
 
 app = FastAPI(title="Global Hunger Predictions")
 
@@ -50,6 +50,17 @@ def _split_countries_param(countries: Optional[List[str]]) -> Optional[List[str]
             uniq.append(c)
     return uniq or None
 
+
+@app.middleware("http")
+async def no_cache_headers(request: Request, call_next):
+    resp = await call_next(request)
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
+    return resp
+
+
+
 @app.get("/predictions/country-year")
 def get_country_year_predictions(
     country: Optional[List[str]] = Query(
@@ -61,7 +72,7 @@ def get_country_year_predictions(
     end_year: Optional[int] = Query(default=None, description="Inclusive end of year range"),
 ):
     """
-    Returns per-country predictions from ai_country_year_predictions_2025_2035_from_full.csv
+    Returns per-country predictions from ai_country_year_predictions_2025_2030_from_full.csv
     Response items look like: {"country": "India", "year": 2029, "ghi_pred": 27.4}
     """
     df = _require_csv(COUNTRY_FILE)
